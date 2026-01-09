@@ -1,5 +1,9 @@
 ---
-# 역할 기본 변수
+# ##############
+# NFS
+# ##############
+
+# 공유폴더
 nfs_mount_path: /mnt/NAS
 
 pc_map:
@@ -9,3 +13,16 @@ pc_map:
   PC4: PC4_db
   PC5: PC5_monitoring
 
+# ##############
+# DB
+# ##############
+
+# MySQL 설치 관련 변수
+mysql_package_name: "mysql-community-server"
+mysql_service_name: "mysqld"
+mysql_repo_name: "mysql80-community"
+mysql_repo_description: "MySQL 8.0 Community Server"
+mysql_repo_baseurl: "https://repo.mysql.com/yum/mysql-8.0-community/el/9/x86_64/"
+mysql_gpg_keys:
+  - "https://repo.mysql.com/RPM-GPG-KEY-mysql-2022"
+  - "https://repo.mysql.com/RPM-GPG-KEY-mysql-2023"
