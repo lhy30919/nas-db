@@ -1,0 +1,11 @@
+---
+# 역할 기본 변수
+nfs_mount_path: /mnt/NAS
+
+pc_map:
+  PC1: PC1_ai
+  PC2: PC2_web
+  PC3: PC3_cicd
+  PC4: PC4_db
+  PC5: PC5_monitoring
+

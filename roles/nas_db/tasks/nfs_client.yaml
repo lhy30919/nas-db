@@ -1,0 +1,29 @@
+---
+- name: Ensure NFS mount directory exists
+  file:
+    path: "{{ nfs_mount_path }}"
+    state: directory
+    owner: ansible-admin
+    group: ansible-admin
+    mode: '0755'
+
+- name: Install NFS client packages
+  yum:
+    name: nfs-utils
+    state: present
+
+- name: Mount NFS share
+  mount:
+    path: "{{ nfs_mount_path }}"
+    src: "{{ hostvars[groups['db_master'][0]].ansible_host }}:{{ nfs_mount_path }}"
+    fstype: nfs
+    opts: hard,intr
+    state: mounted
+
+- name: Ensure NFS mount persists in fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^.*:/mnt/NAS\s+/mnt/NAS\s+nfs'
+    line: "{{ hostvars[groups['db_master'][0]].ansible_host }}:{{ nfs_mount_path }}  {{ nfs_mount_path }}  nfs  defaults  0  0"
+    create: yes
+

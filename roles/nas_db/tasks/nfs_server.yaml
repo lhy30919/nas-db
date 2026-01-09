@@ -1,0 +1,75 @@
+---
+- name: Create NFS base directory
+  file:
+    path: "{{ nfs_mount_path }}"
+    state: directory
+    owner: ansible-admin
+    group: ansible-admin
+    mode: '0755'
+
+- name: Install NFS server packages
+  yum:
+    name:
+      - nfs-utils
+      - rpcbind
+    state: present
+
+- name: Start rpcbind service
+  systemd:
+    name: rpcbind
+    state: started
+    enabled: yes
+
+- name: Configure /etc/exports
+  template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Start NFS server service
+  systemd:
+    name: nfs-server
+    state: started
+    enabled: yes
+
+- name: Start firewalld
+  systemd:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Open NFS ports
+  firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    state: enabled
+  loop:
+    - nfs
+    - rpc-bind
+    - mountd
+
+- name: Apply exportfs
+  command: exportfs -rav
+
+- name: Reload firewalld
+  command: firewall-cmd --reload
+
+- name: Create PC directories on server
+  file:
+    path: "{{ nfs_mount_path }}/{{ item.value }}"
+    state: directory
+    owner: ansible-admin
+    group: ansible-admin
+    mode: '0755'
+  with_dict: "{{ pc_map }}"
+
+- name: Create result directory
+  file:
+    path: "{{ nfs_mount_path }}/result"
+    state: directory
+    owner: ansible-admin
+    group: ansible-admin
+    mode: '0755'
+
