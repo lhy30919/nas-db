@@ -1,0 +1,14 @@
+---
+- name: Ensure firewalld is running
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Open MySQL 3306/tcp port
+  firewalld:
+    port: 3306/tcp
+    permanent: yes
+    state: enabled
+    immediate: yes
+

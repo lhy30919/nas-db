@@ -1,0 +1,6 @@
+---
+- name: DB 설치 (마스터/슬레이브 공통)
+  import_tasks: 0.yaml
+  when: "'db_master' in group_names"
+
+
