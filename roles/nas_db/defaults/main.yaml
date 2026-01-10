@@ -29,3 +29,42 @@ mysql_gpg_keys:
 
 #1)
 mysql_root_password: "Soldesk1."
+
+#2)
+## MySQL 공통 설정
+mysql_datadir: /mnt/new_disk/mysql
+
+mysql_common_options:
+  - { key: "log-bin", value: "mysql-bin" }
+  - { key: "binlog_format", value: "ROW" }
+  - { key: "gtid_mode", value: "ON" }
+  - { key: "enforce_gtid_consistency", value: "ON" }
+  - { key: "log_slave_updates", value: "ON" }
+  - { key: "bind-address", value: "0.0.0.0" }
+  - { key: "datadir", value: "{{ mysql_datadir }}" }
+
+#3)
+# MySQL Master 전용 설정
+mysql_master_options:
+  - { key: "server-id", value: "1" }
+  - { key: "event_scheduler", value: "ON" }
+  - { key: "max_allowed_packet", value: "3G" }
+
+#4)
+# MySQL Slave 전용 설정
+mysql_slave_options:
+  - { key: "server-id", value: "2" }
+  - { key: "read_only", value: "ON" }
+  - { key: "super_read_only", value: "ON" }
+
+#5)
+# Replication 계정 설정 (Master)
+mysql_repl_user: repl
+mysql_repl_password: replpass
+mysql_repl_privileges: "*.*:REPLICATION SLAVE"
+
+#6)
+# Replication (GTID)
+mysql_master_ip: "10.4.4.11"
+mysql_slave_check_timeout: 30
+
