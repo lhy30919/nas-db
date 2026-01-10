@@ -2,11 +2,12 @@
 - name: NFS 마운트 존재 여부 확인
   command: mountpoint -q "{{ nfs_mount_path }}"
   register: mount_check
-  ignore_errors: yes
+  changed_when: false
+  failed_when: false
 
 - name: 기존 NFS 마운트 해제 (lazy)
   command: umount --lazy "{{ nfs_mount_path }}"
-  ignore_errors: yes
+  when: mount_check.rc == 0
 
 - name: 기존 마운트 디렉토리 강제 삭제
   file:

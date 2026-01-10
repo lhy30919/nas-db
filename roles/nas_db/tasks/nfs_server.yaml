@@ -28,6 +28,9 @@
     group: root
     mode: '0644'
 
+- name: Apply exportfs
+  command: exportfs -rav
+
 - name: Start NFS server service
   systemd:
     name: nfs-server
@@ -49,9 +52,6 @@
     - nfs
     - rpc-bind
     - mountd
-
-- name: Apply exportfs
-  command: exportfs -rav
 
 - name: Reload firewalld
   command: firewall-cmd --reload
