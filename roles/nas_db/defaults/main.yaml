@@ -26,3 +26,6 @@ mysql_repo_baseurl: "https://repo.mysql.com/yum/mysql-8.0-community/el/9/x86_64/
 mysql_gpg_keys:
   - "https://repo.mysql.com/RPM-GPG-KEY-mysql-2022"
   - "https://repo.mysql.com/RPM-GPG-KEY-mysql-2023"
+
+#1)
+mysql_root_password: "Soldesk1."

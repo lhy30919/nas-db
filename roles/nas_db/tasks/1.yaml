@@ -1,0 +1,55 @@
+- name: PyMySQL 패키지 설치
+  package:
+    name: python3-PyMySQL
+    state: present
+
+- name: MySQL 임시 root 비밀번호 확인
+  shell: "grep 'temporary password' /var/log/mysqld.log | tail -1 | awk '{print $NF}'"
+  register: mysql_temp_pass
+  changed_when: false
+  failed_when: false
+
+- name: 현재 root 비밀번호로 로그인 가능 여부 확인
+  shell: >
+    mysql -uroot -p'{{ mysql_root_password }}' -e "SELECT 1;"
+  register: root_login_check
+  changed_when: false
+  failed_when: false
+
+- name: 임시 비밀번호로 root 비밀번호 설정 (최초 1회만)
+  shell: >
+    mysql --connect-expired-password -uroot -p'{{ mysql_temp_pass.stdout }}' -e
+    "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}';"
+  when:
+    - mysql_temp_pass.stdout | length > 0
+    - root_login_check.rc != 0
+
+- name: validate_password 플러그인 존재 여부 확인
+  shell: >
+    mysql -uroot -p'{{ mysql_root_password }}' -N -B -e
+    "SELECT COUNT(*) FROM information_schema.PLUGINS
+     WHERE PLUGIN_NAME='validate_password';"
+  register: validate_plugin_count
+  changed_when: false
+
+- name: validate_password 플러그인 제거
+  shell: >
+    mysql -uroot -p'{{ mysql_root_password }}' -e
+    "UNINSTALL PLUGIN validate_password;"
+  when: validate_plugin_count.stdout | int > 0
+
+- name: 익명 사용자 계정 삭제
+  shell: >
+    mysql -uroot -p'{{ mysql_root_password }}' -e
+    "DELETE FROM mysql.user WHERE User='';"
+
+- name: test 데이터베이스 삭제
+  shell: >
+    mysql -uroot -p'{{ mysql_root_password }}' -e
+    "DROP DATABASE IF EXISTS test;"
+
+- name: 권한 정보 재적용
+  shell: >
+    mysql -uroot -p'{{ mysql_root_password }}' -e
+    "FLUSH PRIVILEGES;"
+

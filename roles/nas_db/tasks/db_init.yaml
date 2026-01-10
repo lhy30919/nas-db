@@ -1,6 +1,10 @@
 ---
-- name: DB 설치 (마스터/슬레이브 공통)
+- name: 0_(Master) MySQL 방화벽 설정
   import_tasks: 0.yaml
   when: "'db_master' in group_names"
 
+
+- name: 1_(Master/Slave) MySQL 공통 초기 설정
+  import_tasks: 1.yaml
+  when: "'db_master' in group_names or 'db_slave' in group_names"
 
