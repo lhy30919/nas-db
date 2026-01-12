@@ -14,11 +14,4 @@
     regexp: '^[[:space:]]*{{ item.key }}[[:space:]]*='
     line: "{{ item.key }} = {{ item.value }}"
   loop: "{{ mysql_common_options }}"
-  register: common_conf
-
-- name: MySQL 설정 변경 시 재시작
-  service:
-    name: mysqld
-    state: restarted
-  when: common_conf is changed
 
