@@ -68,3 +68,31 @@ mysql_repl_privileges: "*.*:REPLICATION SLAVE"
 mysql_master_ip: "10.4.4.11"
 mysql_slave_check_timeout: 30
 
+
+# ##############
+# db_table.yaml DB 테이블 관련
+# ##############
+
+db_name: nas_backup
+
+backup_tables:
+  - PC1_backup
+  - PC2_backup
+  - PC3_backup
+  - PC4_backup
+  - PC5_backup
+  - result_backup
+
+# ##############
+# db_backupuser.yaml백업 관리자 계정
+# ##############
+backup_db: nas_backup
+backup_admin_user: backup_admin
+backup_admin_password: "BackupPass1."
+#########################
+# db_cron.yaml 
+#
+cron_user: ansible-admin
+python_path: /usr/bin/python3
+script_path: /home/ansible-admin/backup_to_db.py
+

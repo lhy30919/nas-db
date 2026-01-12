@@ -14,3 +14,22 @@
 - name : test
   import_tasks: db_init.yaml 
 
+- name: 백업 DB 및 테이블 생성 (마스터 전용)
+  import_tasks: db_table.yaml
+  when: "'db_master' in group_names"
+
+- name: 백업 관리자 계정 생성 (마스터 전용)
+  import_tasks: db_backupuser.yaml
+  when: "'db_master' in group_names"
+
+- name: install mysql-connector
+  import_tasks: db_allconnector.yaml
+
+- name: NAS → DB 백업 cron 설정
+  import_tasks: tasks/db_cron.yaml
+  when: "'db_master' in group_names"
+  vars:
+    cron_user: ansible-admin
+    python_path: /usr/bin/python3
+    script_path: /home/ansible-admin/nas_db/backup_to_db.py
+

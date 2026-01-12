@@ -31,8 +31,8 @@
     name: "{{ mysql_package_name }}"
     state: present
 
-- name: 2_(Master/Slave) my.cnf 공통 설정
-  import_tasks: 2.yaml
+- name: 0_(Master/Slave) my.cnf 공통 설정
+  import_tasks: 0.yaml
   when: "'db_master' in group_names or 'db_slave' in group_names"
 
 - name: MySQL 서비스 시작 및 부팅 시 자동 실행
