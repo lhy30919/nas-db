@@ -1,12 +1,12 @@
 ---
-# - name: NFS 서버 설정
-#   import_tasks: nfs_server.yaml
-#   when: "'db_master' in group_names"
-# 
-# - name: NFS 클라이언트 설정
-#   import_tasks: nfs_client.yaml
-#   when: "'client' in group_names"
-# 
+#- name: NFS 서버 설정
+#  import_tasks: nfs_server.yaml
+#  when: "'db_master' in group_names"
+
+#- name: NFS 클라이언트 설정
+#  import_tasks: nfs_client.yaml
+#  when: "'client' in group_names"
+
 - name: DB 설치 (마스터/슬레이브 공통)
   import_tasks: db_install.yaml
   when: "'db_master' in group_names or 'db_slave' in group_names"
@@ -36,3 +36,4 @@
 - name: 백업 복구 프로그램 배포
   import_tasks: tasks/deploy_program.yaml
 
+  
