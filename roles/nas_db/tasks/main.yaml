@@ -31,5 +31,8 @@
   vars:
     cron_user: ansible-admin
     python_path: /usr/bin/python3
-    script_path: /home/ansible-admin/nas_db/backup_to_db.py
+    script_path: /home/ansible-admin/backup_to_db.py
+
+- name: 백업 복구 프로그램 배포
+  import_tasks: tasks/deploy_program.yaml
 

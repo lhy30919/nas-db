@@ -2,19 +2,12 @@
 # NAS → DB 백업 스크립트 cron 등록 (1시간 주기)
 #
 - name: NAS → DB 백업 스크립트 배포
-  copy:
-    src: backup_to_db.py          # roles/nas_db/files/backup_to_db.py
+  template:
+    src: backup_to_db.py.j2
     dest: "{{ script_path }}"
     owner: "{{ cron_user }}"
     group: "{{ cron_user }}"
     mode: '0755'
-
-- name: 백업 스크립트 실행 권한 설정
-  file:
-    path: "{{ script_path }}"
-    mode: '0755'
-    owner: "{{ cron_user }}"
-    group: "{{ cron_user }}"
 
 - name: NAS → DB 백업 cron 작업 등록 (1분 주기)
   cron:
