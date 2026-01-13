@@ -4,6 +4,7 @@
   register: mount_check
   changed_when: false
   failed_when: false
+  become: yes
 
 - name: 기존 NFS 마운트 해제 (lazy)
   command: umount --lazy "{{ nfs_mount_path }}"
