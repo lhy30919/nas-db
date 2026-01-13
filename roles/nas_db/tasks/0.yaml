@@ -8,10 +8,10 @@
     mode: '0750'
 
 - name: MySQL 공통 my.cnf 옵션 설정
-  lineinfile:
-    path: /etc/my.cnf
-    insertafter: '^\[mysqld\]'
-    regexp: '^[[:space:]]*{{ item.key }}[[:space:]]*='
-    line: "{{ item.key }} = {{ item.value }}"
-  loop: "{{ mysql_common_options }}"
+  name: Template a file to /etc/file.conf
+  ansible.builtin.template:
+    src: my.cnf_common.j2
+    dest: /etc/my.cnf
+    owner: mysql
+    group: mysql
 

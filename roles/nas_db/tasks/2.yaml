@@ -4,21 +4,21 @@
     state: present
 
 - name: MySQL 임시 root 비밀번호 확인
-  shell: "grep 'temporary password' /var/log/mysqld.log | tail -1 | awk '{print $NF}'"
+  shell: "grep 'temporary password' {{ mysql_datadir }}/mysqld.log | tail -1 | awk '{print $NF}'"
   register: mysql_temp_pass
   changed_when: false
   failed_when: false
 
 - name: 현재 root 비밀번호로 로그인 가능 여부 확인
   shell: >
-    mysql -uroot -p'{{ mysql_root_password }}' -e "SELECT 1;"
+    mysql -uroot -p'{{ mysql_root_password }}' --socket={{ mysql_datadir }}/mysql.sock -e "SELECT 1;"
   register: root_login_check
   changed_when: false
   failed_when: false
 
 - name: 임시 비밀번호로 root 비밀번호 설정 (최초 1회만)
   shell: >
-    mysql --connect-expired-password -uroot -p'{{ mysql_temp_pass.stdout }}' -e
+    mysql --connect-expired-password -uroot -p'{{ mysql_temp_pass.stdout }}' --socket={{ mysql_datadir }}/mysql.sock -e
     "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}';"
   when:
     - mysql_temp_pass.stdout | length > 0
@@ -26,7 +26,7 @@
 
 - name: validate_password 플러그인 존재 여부 확인
   shell: >
-    mysql -uroot -p'{{ mysql_root_password }}' -N -B -e
+    mysql -uroot -p'{{ mysql_root_password }}' --socket={{ mysql_datadir }}/mysql.sock -N -B -e
     "SELECT COUNT(*) FROM information_schema.PLUGINS
      WHERE PLUGIN_NAME='validate_password';"
   register: validate_plugin_count
@@ -34,22 +34,22 @@
 
 - name: validate_password 플러그인 제거
   shell: >
-    mysql -uroot -p'{{ mysql_root_password }}' -e
+    mysql -uroot -p'{{ mysql_root_password }}' --socket={{ mysql_datadir }}/mysql.sock -e
     "UNINSTALL PLUGIN validate_password;"
   when: validate_plugin_count.stdout | int > 0
 
 - name: 익명 사용자 계정 삭제
   shell: >
-    mysql -uroot -p'{{ mysql_root_password }}' -e
+    mysql -uroot -p'{{ mysql_root_password }}' --socket={{ mysql_datadir }}/mysql.sock -e
     "DELETE FROM mysql.user WHERE User='';"
 
 - name: test 데이터베이스 삭제
   shell: >
-    mysql -uroot -p'{{ mysql_root_password }}' -e
+    mysql -uroot -p'{{ mysql_root_password }}' --socket={{ mysql_datadir }}/mysql.sock -e
     "DROP DATABASE IF EXISTS test;"
 
 - name: 권한 정보 재적용
   shell: >
-    mysql -uroot -p'{{ mysql_root_password }}' -e
+    mysql -uroot -p'{{ mysql_root_password }}' --socket={{ mysql_datadir }}/mysql.sock -e
     "FLUSH PRIVILEGES;"
 
