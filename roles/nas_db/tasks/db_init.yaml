@@ -1,4 +1,8 @@
 ---
+- name: 0_(Master/Slave) my.cnf 공통 설정 및 mysql 디렉토리 설정
+  import_tasks: 0.yaml
+  when: "'db_master' in group_names or 'db_slave' in group_names"
+
 - name: 1_(Master) MySQL 방화벽 설정
   import_tasks: 1.yaml
   when: "'db_master' in group_names"
@@ -7,10 +11,6 @@
 - name: 2_(Master/Slave) MySQL 공통 초기 설정
   import_tasks: 2.yaml
   when: "'db_master' in group_names or 'db_slave' in group_names"
-
-    #- name: 0_(Master/Slave) my.cnf 공통 설정
-    #  import_tasks: 0.yaml
-    # when: "'db_master' in group_names or 'db_slave' in group_names"
 
 - name: 3_(Master) my.cnf 설정
   import_tasks: 3.yaml

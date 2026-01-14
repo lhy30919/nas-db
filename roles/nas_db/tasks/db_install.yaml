@@ -31,18 +31,3 @@
     name: "{{ mysql_package_name }}"
     state: present
 
-- name: 0_(Master/Slave) my.cnf 공통 설정
-  import_tasks: 0.yaml
-  when: "'db_master' in group_names or 'db_slave' in group_names"
-
-- name: MySQL 데이터 디렉토리 초기화
-  command: mysqld --initialize-insecure --datadir={{ mysql_datadir }} --user=mysql
-  args:
-    creates: "{{ mysql_datadir }}/mysql"
-
-- name: MySQL 서비스 시작 및 부팅 시 자동 실행
-  systemd:
-    name: "{{ mysql_service_name }}"
-    state: started
-    enabled: yes
-
