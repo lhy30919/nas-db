@@ -1,37 +1,37 @@
 ---
-- name: NFS 서버 설정
-  import_tasks: nfs_server.yaml
-  when: "'db_master' in group_names"
-
-- name: NFS 클라이언트 설정
-  import_tasks: nfs_client.yaml
-  when: "'client' in group_names"
-
-- name: DB 설치 (마스터/슬레이브 공통)
-  import_tasks: db_install.yaml
-  when: "'db_master' in group_names or 'db_slave' in group_names"
-
-- name : test
-  import_tasks: db_init.yaml 
-
-- name: 백업 DB 및 테이블 생성 (마스터 전용)
-  import_tasks: db_table.yaml
-  when: "'db_master' in group_names"
-
-- name: 백업 관리자 계정 생성 (마스터 전용)
-  import_tasks: db_backupuser.yaml
-  when: "'db_master' in group_names"
-
-- name: install mysql-connector
-  import_tasks: db_allconnector.yaml
-
-- name: NAS → DB 백업 cron 설정
-  import_tasks: tasks/db_cron.yaml
-  when: "'db_master' in group_names"
-  vars:
-    cron_user: ansible-admin
-    python_path: /usr/bin/python3
-    script_path: /home/ansible-admin/backup_to_db.py
+# - name: NFS 서버 설정
+#   import_tasks: nfs_server.yaml
+#   when: "'db_master' in group_names"
+# 
+# - name: NFS 클라이언트 설정
+#   import_tasks: nfs_client.yaml
+#   when: "'client' in group_names"
+# 
+# - name: DB 설치 (마스터/슬레이브 공통)
+#   import_tasks: db_install.yaml
+#   when: "'db_master' in group_names or 'db_slave' in group_names"
+# 
+# - name : test
+#   import_tasks: db_init.yaml 
+# 
+# - name: 백업 DB 및 테이블 생성 (마스터 전용)
+#   import_tasks: db_table.yaml
+#   when: "'db_master' in group_names"
+# 
+# - name: 백업 관리자 계정 생성 (마스터 전용)
+#   import_tasks: db_backupuser.yaml
+#   when: "'db_master' in group_names"
+# 
+# - name: install mysql-connector
+#   import_tasks: db_allconnector.yaml
+# 
+# - name: NAS → DB 백업 cron 설정
+#   import_tasks: tasks/db_cron.yaml
+#   when: "'db_master' in group_names"
+#   vars:
+#     cron_user: ansible-admin
+#     python_path: /usr/bin/python3
+#     script_path: /home/ansible-admin/backup_to_db.py
 
 - name: 백업 복구 프로그램 배포
   import_tasks: tasks/deploy_program.yaml

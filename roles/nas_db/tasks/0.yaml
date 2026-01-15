@@ -8,7 +8,6 @@
     mode: '0750'
 
 - name: MySQL 공통 my.cnf 옵션 설정
-  name: Template a file to /etc/file.conf
   ansible.builtin.template:
     src: my.cnf_common.j2
     dest: /etc/my.cnf
