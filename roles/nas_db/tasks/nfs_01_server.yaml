@@ -1,5 +1,5 @@
 ---
-- name: Create NFS base directory
+- name: NFS 기본 디렉터리 생성
   file:
     path: "{{ nfs_mount_path }}"
     state: directory
@@ -7,20 +7,20 @@
     group: ansible-admin
     mode: '0755'
 
-- name: Install NFS server packages
+- name: NFS 서버 패키지 설치
   yum:
     name:
       - nfs-utils
       - rpcbind
     state: present
 
-- name: Start rpcbind service
+- name: rpcbind 서비스 시작 및 활성화
   systemd:
     name: rpcbind
     state: started
     enabled: yes
 
-- name: Configure /etc/exports
+- name: /etc/exports 설정 파일 구성
   template:
     src: exports.j2
     dest: /etc/exports
@@ -28,22 +28,22 @@
     group: root
     mode: '0644'
 
-- name: Apply exportfs
+- name: NFS export 설정 적용
   command: exportfs -rav
 
-- name: Start NFS server service
+- name: NFS 서버 서비스 시작 및 활성화
   systemd:
     name: nfs-server
     state: started
     enabled: yes
 
-- name: Start firewalld
+- name: firewalld 서비스 시작 및 활성화
   systemd:
     name: firewalld
     state: started
     enabled: yes
 
-- name: Open NFS ports
+- name: NFS 관련 방화벽 포트 개방
   firewalld:
     service: "{{ item }}"
     permanent: yes
@@ -53,10 +53,10 @@
     - rpc-bind
     - mountd
 
-- name: Reload firewalld
+- name: 방화벽 설정 재적용
   command: firewall-cmd --reload
 
-- name: Create PC directories on server
+- name: 서버에 PC별 디렉터리 생성
   file:
     path: "{{ nfs_mount_path }}/{{ item.value }}"
     state: directory
@@ -65,7 +65,7 @@
     mode: '0755'
   with_dict: "{{ pc_map }}"
 
-- name: Create result directory
+- name: 결과 저장용 디렉터리 생성
   file:
     path: "{{ nfs_mount_path }}/result"
     state: directory
