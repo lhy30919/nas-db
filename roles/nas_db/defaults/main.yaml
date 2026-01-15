@@ -6,6 +6,9 @@
 # 공유폴더
 nfs_mount_path: /mnt/NAS
 
+nfs_owner_user: ansible-admin
+
+
 pc_map:
   PC1: PC1_ai
   PC2: PC2_web
