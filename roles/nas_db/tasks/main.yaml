@@ -53,10 +53,6 @@
 - name: 2_12) NAS → DB 백업 cron 설정
   import_tasks: db_12_cron.yaml
   when: "'db_master' in group_names"
-  vars:
-    cron_user: ansible-admin
-    python_path: /usr/bin/python3
-    script_path: /home/ansible-admin/backup_to_db.py
 
 - name: 2_13) 백업 복구 프로그램 배포
   import_tasks: db_13_deploy_program.yaml

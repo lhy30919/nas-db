@@ -21,8 +21,8 @@
   file:
     path: "{{ nfs_mount_path }}"
     state: directory
-    owner: ansible-admin
-    group: ansible-admin
+    owner: "{{ nfs_owner_user }}"
+    group: "{{ nfs_owner_user }}"
     mode: '0755'
   become: yes
 

@@ -37,15 +37,6 @@ mysql_root_password: "Soldesk1."
 ## MySQL 공통 설정
 mysql_datadir: /mnt/new_disk/mysql
 
-mysql_common_options:
-  - { key: "log-bin", value: "mysql-bin" }
-  - { key: "binlog_format", value: "ROW" }
-  - { key: "gtid_mode", value: "ON" }
-  - { key: "enforce_gtid_consistency", value: "ON" }
-  - { key: "log_slave_updates", value: "ON" }
-  - { key: "bind-address", value: "0.0.0.0" }
-  - { key: "datadir", value: "{{ mysql_datadir }}" }
-
 #3)
 # MySQL Master 전용 설정
 mysql_master_options:
