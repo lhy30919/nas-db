@@ -12,16 +12,12 @@ import mysql.connector
 # ==============================
 # 0-1) MySQL 연결 설정
 # ==============================
-DB_HOST = "10.4.4.11"
-DB_USER = "backup_admin"
-DB_PASS = "BackupPass1."
-DB_NAME = "nas_backup"
-
+# MySQL 연결
 db_connection = mysql.connector.connect(
-    host=DB_HOST,
-    user=DB_USER,
-    password=DB_PASS,
-    database=DB_NAME
+    host="{{ db_master_ip }}",
+    user="{{ backup_admin_user }}",
+    password="{{ backup_admin_password }}",
+    database="{{ backup_db }}",
 )
 cursor = db_connection.cursor()
 
