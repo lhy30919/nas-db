@@ -1,7 +1,14 @@
 ---
 # roles/nas_db/tasks/nfs_02_client.yaml
+- name: 기존 NFS 마운트 상태 확인
+  command: mountpoint -q "{{ nfs_mount_path }}"
+  register: mount_check
+  ignore_errors: yes
+  become: yes
+
 - name: 기존 NFS 마운트 해제 (lazy)
   command: umount --lazy "{{ nfs_mount_path }}"
+  when: mount_check.rc == 0
   ignore_errors: yes
   become: yes
 
