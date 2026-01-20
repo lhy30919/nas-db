@@ -7,6 +7,20 @@
 nfs_mount_path: /mnt/NAS
 
 nfs_owner_user: ansible-admin
+
+pc_map:
+  PC1: PC1_ai
+  PC2: PC2_web
+  PC3: PC3_cicd
+  PC4: PC4_db
+  PC5: PC5_monitoring
+
+# ##############
+# DB
+# ##############
+
+# MySQL 설치 관련 변수
+mysql_package_name: "mysql-community-server"
 mysql_service_name: "mysqld"
 mysql_repo_name: "mysql80-community"
 mysql_repo_description: "MySQL 8.0 Community Server"
