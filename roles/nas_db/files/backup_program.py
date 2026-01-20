@@ -12,7 +12,7 @@ import mysql.connector
 # ==============================
 # 0-1) MySQL 연결 설정
 # ==============================
-DB_HOST = "10.4.4.11"
+DB_HOST = "10.4.4.12"
 DB_USER = "backup_admin"
 DB_PASS = "BackupPass1."
 DB_NAME = "nas_backup"
@@ -32,7 +32,7 @@ BACKUP_META_DIR = "/home/ansible-admin/backup_list"
 BACKUP_LIST_FILE = f"{BACKUP_META_DIR}/backup_list.txt"
 os.makedirs(BACKUP_META_DIR, exist_ok=True)
 
-MASTER_IP = "10.4.4.11"
+MASTER_IP = "10.4.4.12"
 
 # ==============================
 # 0-3) IP → PC 매핑

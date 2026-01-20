@@ -7,7 +7,7 @@ from datetime import datetime
 # ==============================
 # MySQL 연결 설정
 # ==============================
-DB_HOST = "10.4.4.11"  
+DB_HOST = "10.4.4.12"  
 DB_USER = "backup_admin"
 DB_PASS = "BackupPass1."
 DB_NAME = "nas_backup"

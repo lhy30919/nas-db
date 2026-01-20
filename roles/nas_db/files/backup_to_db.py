@@ -4,7 +4,7 @@ from datetime import datetime
 
 # MySQL 연결
 db_connection = mysql.connector.connect(
-    host="10.4.4.11",
+    host="10.4.4.12",
     user="backup_admin",
     password="BackupPass1.",
     database="nas_backup",
