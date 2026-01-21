@@ -1,12 +1,10 @@
----
 - name: MHA 계정 생성/유지
   community.mysql.mysql_user:
     name: "{{ mysql_mha_user }}"
     host: "%"
     password: "{{ mysql_mha_password }}"
-    priv: "SUPER, REPLICATION CLIENT, PROCESS ON *.*"
+    priv: "*.*:SUPER,REPLICATION CLIENT,PROCESS"
     state: present
     login_user: root
     login_password: "{{ mysql_root_password }}"
-  become: yes
 
