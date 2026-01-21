@@ -37,7 +37,7 @@
 - name: NFS 공유 마운트
   mount:
     path: "{{ nfs_mount_path }}"
-    src: "{{ hostvars[groups['nfs_server'][0]].ansible_host }}:{{ nfs_mount_path }}"
+    src: "{{ hostvars[groups['db_nfs'][0]].ansible_host }}:{{ nfs_mount_path }}"
     fstype: nfs
     opts: hard,intr
     state: mounted
@@ -47,7 +47,7 @@
   lineinfile:
     path: /etc/fstab
     regexp: '^.*:/mnt/NAS\s+/mnt/NAS\s+nfs'
-    line: "{{ hostvars[groups['nfs_server'][0]].ansible_host }}:{{ nfs_mount_path }}  {{ nfs_mount_path }}  nfs  defaults  0  0"
+    line: "{{ hostvars[groups['db_nfs'][0]].ansible_host }}:{{ nfs_mount_path }}  {{ nfs_mount_path }}  nfs  defaults  0  0"
     create: yes
   become: yes
 
