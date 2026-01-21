@@ -50,6 +50,10 @@ mysql_slave_options:
   - { key: "read_only", value: "ON" }
   - { key: "super_read_only", value: "ON" }
 
+# MHA user 계정 설정 (Master)/(slave)
+mysql_mha_user: mha
+mysql_mha_password: mhapass
+
 #5)
 # Replication 계정 설정 (Master)
 mysql_repl_user: repl
