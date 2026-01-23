@@ -257,7 +257,7 @@
     group: root
     mode: '0755'
 
-- name: 자동 복구 스크립트 생성
+- name: 자동 복구 스크립트 생성 (무한 대기 + 로그 최적화)
   ansible.builtin.copy:
     content: |
       #!/bin/bash
@@ -289,26 +289,25 @@
       
       sleep 30
       
-      log "Step 1: Waiting for original master MySQL..."
-      MAX_RETRIES=20
+      log "Step 1: Waiting for original master MySQL (INFINITE)..."
       RETRY=0
+      LOG_INTERVAL=120  # 1시간 = 120회 시도 (30초 * 120 = 3600초)
       
-      while [ $RETRY -lt $MAX_RETRIES ]; do
-          log "Attempt $((RETRY+1))/$MAX_RETRIES"
+      while true; do
+          RETRY=$((RETRY+1))
+          
+          # 처음 10번은 매번 로그, 그 이후는 1시간에 1번만
+          if [ $RETRY -le 10 ] || [ $((RETRY % LOG_INTERVAL)) -eq 0 ]; then
+              log "Attempt $RETRY - Waiting for $ORIGINAL_MASTER to come back..."
+          fi
       
           if mysql -h $ORIGINAL_MASTER -u$MYSQL_USER -p$MYSQL_PASS -e "SELECT 1" >/dev/null 2>&1; then
-              log "Original master MySQL is UP!"
+              log "✓ Original master MySQL is UP after $RETRY attempts!"
               break
           fi
       
           sleep 30
-          RETRY=$((RETRY+1))
       done
-      
-      if [ $RETRY -eq $MAX_RETRIES ]; then
-          log "Original master did not come back online"
-          exit 0
-      fi
       
       log "Step 2: Configuring original master as slave..."
       mysql -h $ORIGINAL_MASTER -u$MYSQL_USER -p$MYSQL_PASS <<SQLCMD >> "$LOG" 2>&1
@@ -408,6 +407,7 @@
       
       log "========================================="
       log "AUTO FAILBACK COMPLETED!"
+      log "Total wait time: $((RETRY * 30)) seconds"
       log "Master: $ORIGINAL_MASTER"
       log "Slave: $CURRENT_MASTER"
       log "========================================="
