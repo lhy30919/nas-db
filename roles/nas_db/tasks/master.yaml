@@ -1,0 +1,123 @@
+---
+- name: 1) 호스트네임 설정
+  ansible.builtin.hostname:
+    name: db-master
+  become: yes
+
+- name: 2) /etc/hosts 정리
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    state: absent
+    regexp: 'mha-manager|db-master|db-slave'
+  become: yes
+
+- name: 2) /etc/hosts 추가
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: |
+      10.4.4.11 mha-manager
+      10.4.4.12 db-master
+      10.4.4.13 db-slave
+  become: yes
+
+- name: 3) /var/log/mha/app1 디렉토리 생성 및 권한
+  ansible.builtin.file:
+    path: /var/log/mha/app1
+    state: directory
+    owner: ansible-admin
+    group: ansible-admin
+    mode: '0755'
+  become: yes
+
+- name: 3-1) /mnt/new_disk 권한 설정
+  ansible.builtin.file:
+    path: /mnt/new_disk
+    recurse: yes
+    mode: '0755'
+  become: yes
+
+- name: 5) relay_log 절대경로 추가
+  ansible.builtin.blockinfile:
+    path: /etc/my.cnf
+    block: |
+      relay_log = /mnt/new_disk/mysql/ansible-relay-bin
+      relay_log_index = /mnt/new_disk/mysql/ansible-relay-bin.index
+  become: yes
+
+- name: 6) .my.cnf 추가
+  ansible.builtin.copy:
+    dest: /home/ansible-admin/.my.cnf
+    content: |
+      [client]
+      user={{ mysql_mha_user }}
+      password={{ mysql_mha_password }}
+      socket={{ mysql_datadir }}/mysql.sock
+    owner: ansible-admin
+    group: ansible-admin
+    mode: '0600'
+
+- name: 7) MySQL 재시작
+  ansible.builtin.service:
+    name: mysqld
+    state: restarted
+  become: yes
+
+- name: 8) 필수 패키지 설치 (기본)
+  ansible.builtin.dnf:
+    name:
+      - epel-release
+      - perl
+      - perl-DBI
+      - perl-DBD-MySQL
+      - perl-Config-Tiny
+      - openssh-clients
+      - git
+      - make
+    state: present
+  become: yes
+
+- name: 8-1) CRB repo 활성화
+  ansible.builtin.command: dnf config-manager --set-enabled crb
+  become: yes
+
+- name: 8-2) CPAN 설치를 위한 Perl 모듈 설치
+  ansible.builtin.dnf:
+    name: perl-App-cpanminus
+    state: present
+  become: yes
+
+- name: 8-3) Perl 모듈 설치 via cpanm
+  ansible.builtin.command: cpanm Log::Dispatch Parallel::ForkManager Module::Install
+  become: yes
+
+- name: 9) MHA Node 설치 (git clone)
+  ansible.builtin.git:
+    repo: https://github.com/yoshinorim/mha4mysql-node.git
+    dest: ~/src/mha4mysql-node
+    version: master
+    update: no
+
+- name: 9-1) MHA Node 빌드 및 설치
+  ansible.builtin.command:
+    cmd: perl Makefile.PL --installdirs site && make && sudo make install
+    args:
+      chdir: ~/src/mha4mysql-node
+  become: yes
+
+- name: 10) MHA 계정 생성
+  community.mysql.mysql_user:
+    name: "{{ mysql_mha_user }}"
+    host: '%'
+    password: "{{ mysql_mha_password }}"
+    priv: "*.*:ALL"
+    state: present
+    login_user: root
+    login_password: "Soldesk1."
+  become: yes
+
+- name: 11) VIP 추가
+  ansible.builtin.command: >
+    ip addr add 10.4.4.100/24 dev $(ip route | awk '/default/ {print $5}')
+  ignore_errors: yes
+  become: yes
+
