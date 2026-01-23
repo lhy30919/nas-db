@@ -1,227 +1,198 @@
----
-# - name: "1) 호스트네임 설정"
-#   ansible.builtin.hostname:
-#     name: db-master
-#   become: yes
-# 
-# - name: "2) /etc/hosts 정리 (기존 항목 제거)"
-#   ansible.builtin.lineinfile:
-#     path: /etc/hosts
-#     state: absent
-#     regexp: 'mha-manager|db-master|db-slave'
-#   become: yes
-# 
-# - name: "2) /etc/hosts 추가 (블록)"
-#   ansible.builtin.blockinfile:
-#     path: /etc/hosts
-#     block: |
-#       10.4.4.11 mha-manager
-#       10.4.4.12 db-master
-#       10.4.4.13 db-slave
-#   become: yes
-# 
-# - name: "3) /var/log/mha/app1 디렉토리 생성 및 권한"
-#   ansible.builtin.file:
-#     path: /var/log/mha/app1
-#     state: directory
-#     owner: ansible-admin
-#     group: ansible-admin
-#     mode: '0755'
-#   become: yes
-# 
-# - name: "3-1) /mnt 권한 설정"
-#   ansible.builtin.file:
-#     path: /mnt
-#     state: directory
-#     mode: '0755'
-#   become: yes
-# 
-# - name: "3-2) /mnt/new_disk 존재 확인 및 권한 설정"
-#   ansible.builtin.file:
-#     path: /mnt/new_disk
-#     state: directory
-#     mode: '0755'
-#   become: yes
-# 
-# - name: "4) sudoers: ansible-admin에게 필요한 명령 NOPASSWD 허용"
-#   ansible.builtin.copy:
-#     dest: /etc/sudoers.d/mha-auto
-#     content: |
-#       ansible-admin ALL=(ALL) NOPASSWD: /usr/sbin/ip
-#       ansible-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart mysqld
-#       ansible-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl start mysqld
-#       ansible-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop mysqld
-#       ansible-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl status mysqld
-#     owner: root
-#     group: root
-#     mode: '0440'
-#   become: yes
-# 
-# - name: "5) relay_log 기존 설정 제거"
-#   ansible.builtin.lineinfile:
-#     path: /etc/my.cnf
-#     state: absent
-#     regexp: '^relay_log'
-#   become: yes
-# 
-# - name: "5) relay_log 절대경로 추가"
-#   ansible.builtin.blockinfile:
-#     path: /etc/my.cnf
-#     block: |
-#       relay_log = /mnt/new_disk/mysql/ansible-relay-bin
-#       relay_log_index = /mnt/new_disk/mysql/ansible-relay-bin.index
-#     marker: "# {mark} ANSIBLE MANAGED BLOCK - RELAY LOG"
-#   become: yes
-# 
-# - name: "6) .my.cnf 추가 (ansible-admin 홈)"
-#   ansible.builtin.copy:
-#     dest: /home/ansible-admin/.my.cnf
-#     content: |
-#       [client]
-#       user=mha
-#       password=mhapass
-#       socket=/mnt/new_disk/mysql/mysql.sock
-#     owner: ansible-admin
-#     group: ansible-admin
-#     mode: '0600'
-# 
-# - name: "7) MySQL 재시작"
-#   ansible.builtin.service:
-#     name: mysqld
-#     state: restarted
-#   become: yes
-# 
-# - name: "7-1) MySQL 시작 대기"
-#   ansible.builtin.wait_for:
-#     timeout: 3
-#   delegate_to: localhost
-# 
-# - name: "8) EPEL 저장소 설치"
-#   ansible.builtin.dnf:
-#     name: epel-release
-#     state: present
-#   become: yes
-# 
-# - name: "8-1) CRB 저장소 활성화"
-#   ansible.builtin.command: dnf config-manager --set-enabled crb
-#   changed_when: false
-#   failed_when: false
-#   become: yes
-# 
-# - name: "8-2) 필수 패키지 설치"
-#   ansible.builtin.dnf:
-#     name:
-#       - perl
-#       - perl-DBI
-#       - perl-DBD-MySQL
-#       - perl-Config-Tiny
-#       - perl-Time-HiRes
-#       - perl-Log-Dispatch
-#       - perl-Parallel-ForkManager
-#       - perl-Module-Install
-#       - openssh-clients
-#       - git
-#       - make
-#     state: present
-#   become: yes
-#   register: pkg_install
-#   retries: 3
-#   delay: 5
-#   until: pkg_install is succeeded
-
-- name: "9) MHA Node 소스 디렉토리 준비"
+- name: 소스 디렉토리 생성
   ansible.builtin.file:
     path: /home/ansible-admin/src
     state: directory
     owner: ansible-admin
     group: ansible-admin
     mode: '0755'
+# roles/nas_db/tasks/master.yaml
+# Master 서버(10.4.4.12) 설정
 
-- name: "9-1) 기존 MHA Node 디렉토리 확인"
-  ansible.builtin.stat:
-    path: /home/ansible-admin/src/mha4mysql-node
-  register: mha_node_dir
+- name: 호스트네임 설정
+  ansible.builtin.hostname:
+    name: db-master
+    use: systemd
 
-- name: "9-2) MHA Node 클론 (git) - 타임아웃 설정"
-  ansible.builtin.git:
-    repo: https://github.com/yoshinorim/mha4mysql-node.git
-    dest: /home/ansible-admin/src/mha4mysql-node
-    version: master
-    force: no
-    update: no
-    accept_hostkey: yes
-  become_user: ansible-admin
-  when: not mha_node_dir.stat.exists
-  register: git_clone
-  retries: 3
-  delay: 10
-  until: git_clone is succeeded
-  timeout: 300
+- name: /etc/hostname 파일 생성
+  ansible.builtin.copy:
+    content: "db-master\n"
+    dest: /etc/hostname
+    owner: root
+    group: root
+    mode: '0644'
 
-- name: "9-3) MHA Node 소스 디렉토리 권한 확인"
+- name: /etc/hosts 기존 항목 제거
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "{{ item }}"
+    state: absent
+  loop:
+    - 'mha-manager'
+    - 'db-master'
+    - 'db-slave'
+
+- name: /etc/hosts 항목 추가
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: |
+      10.4.4.11 mha-manager
+      10.4.4.12 db-master
+      10.4.4.13 db-slave
+    marker: "# {mark} MHA MANAGED BLOCK"
+
+- name: MHA 로그 디렉토리 생성
   ansible.builtin.file:
-    path: /home/ansible-admin/src/mha4mysql-node
+    path: /var/log/mha/app1
     state: directory
     owner: ansible-admin
     group: ansible-admin
+    mode: '0755'
     recurse: yes
 
-- name: "9-4) MHA Node 빌드: perl Makefile.PL"
-  ansible.builtin.command: perl Makefile.PL --installdirs site
-  args:
-    chdir: /home/ansible-admin/src/mha4mysql-node
-    creates: /home/ansible-admin/src/mha4mysql-node/Makefile
+- name: /mnt 디렉토리 권한 설정
+  ansible.builtin.file:
+    path: /mnt
+    mode: '0755'
+
+- name: /mnt/new_disk 디렉토리 권한 설정
+  ansible.builtin.file:
+    path: /mnt/new_disk
+    mode: '0755'
+    recurse: yes
+
+- name: MHA sudo 권한 설정
+  ansible.builtin.copy:
+    content: |
+      ansible-admin ALL=(ALL) NOPASSWD: /usr/sbin/ip
+      ansible-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart mysqld
+      ansible-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl start mysqld
+      ansible-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop mysqld
+      ansible-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl status mysqld
+    dest: /etc/sudoers.d/mha-auto
+    owner: root
+    group: root
+    mode: '0440'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: my.cnf에서 기존 relay_log 설정 제거
+  ansible.builtin.lineinfile:
+    path: /etc/my.cnf
+    regexp: '^relay_log'
+    state: absent
+
+- name: relay_log 설정 추가
+  ansible.builtin.blockinfile:
+    path: /etc/my.cnf
+    block: |
+      relay_log = /mnt/new_disk/mysql/ansible-relay-bin
+      relay_log_index = /mnt/new_disk/mysql/ansible-relay-bin.index
+    marker: "# {mark} RELAY LOG MANAGED BLOCK"
+
+- name: .my.cnf 파일 생성
+  ansible.builtin.copy:
+    content: |
+      [client]
+      user=mha
+      password=mhapass
+      socket=/mnt/new_disk/mysql/mysql.sock
+    dest: /home/ansible-admin/.my.cnf
+    owner: ansible-admin
+    group: ansible-admin
+    mode: '0600'
+
+- name: MySQL 재시작
+  ansible.builtin.systemd:
+    name: mysqld
+    state: restarted
+
+- name: MySQL 재시작 대기
+  ansible.builtin.pause:
+    seconds: 3
+
+- name: EPEL 저장소 설치
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+
+- name: CRB 저장소 활성화
+  community.general.ini_file:
+    path: /etc/yum.repos.d/centos.repo
+    section: crb
+    option: enabled
+    value: "1"
+    no_extra_spaces: yes
+
+- name: DNF 캐시 업데이트
+  ansible.builtin.dnf:
+    update_cache: yes
+
+- name: MHA 필수 패키지 설치
+  ansible.builtin.dnf:
+    name:
+      - perl
+      - perl-DBI
+      - perl-DBD-MySQL
+      - perl-Config-Tiny
+      - perl-Time-HiRes
+      - perl-Log-Dispatch
+      - perl-Parallel-ForkManager
+      - perl-Module-Install
+      - openssh-clients
+      - git
+      - make
+    state: present
+
+- name: MHA Node 저장소 클론
+  ansible.builtin.git:
+    repo: https://github.com/yoshinorim/mha4mysql-node.git
+    dest: /home/ansible-admin/src/mha4mysql-node
+    update: no
   become_user: ansible-admin
 
-- name: "9-5) MHA Node 빌드: make"
-  community.general.make:
+- name: MHA Node Makefile 존재 확인
+  ansible.builtin.stat:
+    path: /home/ansible-admin/src/mha4mysql-node/Makefile
+  register: makefile_stat
+
+- name: MHA Node Makefile 생성
+  ansible.builtin.shell:
+    cmd: perl Makefile.PL --installdirs site
+    chdir: /home/ansible-admin/src/mha4mysql-node
+  become_user: ansible-admin
+  when: not makefile_stat.stat.exists
+
+- name: MHA Node 빌드
+  ansible.builtin.make:
     chdir: /home/ansible-admin/src/mha4mysql-node
   become_user: ansible-admin
 
-- name: "9-6) MHA Node 설치: make install"
-  community.general.make:
+- name: MHA Node 설치
+  ansible.builtin.make:
     chdir: /home/ansible-admin/src/mha4mysql-node
     target: install
-  become: yes
 
-- name: "10) MHA 계정 생성 (MySQL 사용자)"
+- name: MHA 계정 생성
   community.mysql.mysql_user:
     name: mha
     host: '%'
     password: mhapass
-    priv: "*.*:ALL"
+    priv: '*.*:ALL PRIVILEGES'
     state: present
     login_user: root
-    login_password: "{{ mysql_root_password }}"
+    login_password: Soldesk1.
     login_unix_socket: /mnt/new_disk/mysql/mysql.sock
-  become: yes
 
-- name: "11) 기본 네트워크 인터페이스 확인"
-  ansible.builtin.shell: ip route | awk '/default/ {print $5}'
-  register: default_iface
-  changed_when: false
+- name: VIP 추가 (10.4.4.100)
+  ansible.builtin.command:
+    cmd: ip addr add 10.4.4.100/24 dev {{ ansible_default_ipv4.interface }}
+  register: vip_result
+  failed_when: false
+  changed_when: vip_result.rc == 0
 
-- name: "11-1) VIP 존재 여부 확인"
-  ansible.builtin.shell: ip addr show | grep -w 10.4.4.100 || echo "not_found"
-  register: vip_check
-  changed_when: false
-
-- name: "11-2) VIP 추가 (존재하지 않을 때만)"
-  ansible.builtin.command: ip addr add 10.4.4.100/24 dev {{ default_iface.stdout }}
-  when: "'not_found' in vip_check.stdout"
-  become: yes
-  register: add_vip
-  failed_when: add_vip.rc not in [0, 2]
-
-- name: "12) 권한 정리: /var/log/mha 소유권 재설정"
-  ansible.builtin.file:
-    path: /var/log/mha
-    state: directory
-    owner: ansible-admin
-    group: ansible-admin
-    recurse: yes
-  become: yes
-
-- name: "13) 마무리 메시지"
+- name: VIP 추가 결과 메시지
   ansible.builtin.debug:
-    msg: "==== Master 완료 ===="
+    msg: "{% if vip_result.rc == 0 %}VIP 추가 완료{% else %}VIP 이미 존재{% endif %}"
+
+- name: Master 설정 완료
+  ansible.builtin.debug:
+    msg: "==== Master 서버 설정 완료 ===="
