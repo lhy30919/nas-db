@@ -167,9 +167,11 @@
       remote_workdir=/var/log/mha/app1
       
       ping_interval=3
+      ping_type=CONNECT
       master_binlog_dir=/mnt/new_disk/mysql
-      secondary_check_script=masterha_secondary_check -s 10.4.4.12 -s 10.4.4.13
+      secondary_check_script=masterha_secondary_check -s 10.4.4.13 --user=ansible-admin
       master_ip_failover_script=/usr/local/bin/master_ip_failover.sh
+      master_ip_online_change_script=/usr/local/bin/master_ip_online_change.sh
       
       [server1]
       hostname=10.4.4.12
@@ -195,6 +197,8 @@
       VIP="10.4.4.100/24"
       LOGFILE="/var/log/mha/vip_failover.log"
       RECOVERY_SCRIPT="/usr/local/bin/mha_auto_recovery.sh"
+      MYSQL_USER="mha"
+      MYSQL_PASS="mhapass"
       mkdir -p /var/log/mha
       
       log() {
@@ -220,19 +224,53 @@
       
       case "$command" in
           stop|stopssh)
-              log "Removing VIP from $orig_master_host"
-              IFACE=$(ssh -o StrictHostKeyChecking=no ${ssh_user}@${orig_master_host} "ip route | awk '/default/ {print \$5}'")
-              ssh -o StrictHostKeyChecking=no ${ssh_user}@${orig_master_host} \
-                  "sudo /usr/sbin/ip addr del $VIP dev $IFACE 2>/dev/null || true"
-              log "VIP removed from $orig_master_host"
+              log "Checking MySQL status on $orig_master_host before VIP removal"
+              
+              # MySQL 응답 체크 (타임아웃 5초)
+              if timeout 5 mysql -h $orig_master_host -u$MYSQL_USER -p$MYSQL_PASS -e "SELECT 1" >/dev/null 2>&1; then
+                  log "MySQL is still responding on $orig_master_host (graceful shutdown)"
+                  log "Removing VIP via SSH"
+                  IFACE=$(ssh -o StrictHostKeyChecking=no ${ssh_user}@${orig_master_host} "ip route | awk '/default/ {print \$5}'" 2>/dev/null)
+                  ssh -o StrictHostKeyChecking=no ${ssh_user}@${orig_master_host} \
+                      "sudo /usr/sbin/ip addr del $VIP dev $IFACE" 2>/dev/null
+                  log "VIP removed from $orig_master_host"
+              else
+                  log "MySQL NOT responding on $orig_master_host (VM down/suspended/crashed)"
+                  log "Cannot remove VIP - will be cleaned up during auto-recovery"
+              fi
               exit 0
               ;;
           start)
               log "Adding VIP to $new_master_host"
-              IFACE=$(ssh -o StrictHostKeyChecking=no ${ssh_user}@${new_master_host} "ip route | awk '/default/ {print \$5}'")
-              ssh -o StrictHostKeyChecking=no ${ssh_user}@${new_master_host} \
-                  "sudo /usr/sbin/ip addr add $VIP dev $IFACE 2>/dev/null || true"
-              log "VIP added to $new_master_host"
+              
+              # 먼저 새 마스터의 MySQL이 정상인지 확인
+              if ! timeout 5 mysql -h $new_master_host -u$MYSQL_USER -p$MYSQL_PASS -e "SELECT 1" >/dev/null 2>&1; then
+                  log "ERROR: MySQL not responding on $new_master_host!"
+                  exit 1
+              fi
+              
+              # 기존 VIP 존재 여부 확인
+              EXISTING_VIP=$(ssh -o StrictHostKeyChecking=no ${ssh_user}@${new_master_host} \
+                  "ip addr show | grep '10.4.4.100'" 2>/dev/null | wc -l)
+              
+              if [ "$EXISTING_VIP" -gt 0 ]; then
+                  log "VIP already exists on $new_master_host"
+              else
+                  IFACE=$(ssh -o StrictHostKeyChecking=no ${ssh_user}@${new_master_host} "ip route | awk '/default/ {print \$5}'")
+                  ssh -o StrictHostKeyChecking=no ${ssh_user}@${new_master_host} \
+                      "sudo /usr/sbin/ip addr add $VIP dev $IFACE" 2>/dev/null
+                  
+                  sleep 1
+                  VIP_CHECK=$(ssh -o StrictHostKeyChecking=no ${ssh_user}@${new_master_host} \
+                      "ip addr show | grep '10.4.4.100'" 2>/dev/null | wc -l)
+                  
+                  if [ "$VIP_CHECK" -gt 0 ]; then
+                      log "VIP successfully added to $new_master_host"
+                  else
+                      log "ERROR: Failed to add VIP to $new_master_host"
+                      exit 1
+                  fi
+              fi
               
               log "Starting auto-recovery script..."
               log "Command: bash $RECOVERY_SCRIPT $orig_master_host $new_master_host"
@@ -241,7 +279,7 @@
                   --description="MHA Auto Recovery" \
                   /bin/bash "$RECOVERY_SCRIPT" "$orig_master_host" "$new_master_host" >> "$LOGFILE" 2>&1
               
-              log "Auto-recovery script launched"
+              log "Auto-recovery script launched in background"
               exit 0
               ;;
           status)
@@ -253,6 +291,66 @@
               ;;
       esac
     dest: /usr/local/bin/master_ip_failover.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: VIP Online Change 스크립트 생성
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      
+      VIP="10.4.4.100/24"
+      LOGFILE="/var/log/mha/vip_online_change.log"
+      mkdir -p /var/log/mha
+      
+      log() {
+          echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >> "$LOGFILE"
+      }
+      
+      command=""
+      orig_master_host=""
+      new_master_host=""
+      ssh_user="ansible-admin"
+      
+      while [[ $# -gt 0 ]]; do
+          case $1 in
+              --command=*) command="${1#*=}" ;;
+              --orig_master_host=*) orig_master_host="${1#*=}" ;;
+              --new_master_host=*) new_master_host="${1#*=}" ;;
+              --ssh_user=*) ssh_user="${1#*=}" ;;
+          esac
+          shift
+      done
+      
+      log "=== Online Change Command: $command ==="
+      
+      case "$command" in
+          stop)
+              log "Removing VIP from $orig_master_host"
+              IFACE=$(ssh -o StrictHostKeyChecking=no ${ssh_user}@${orig_master_host} "ip route | awk '/default/ {print \$5}'")
+              ssh -o StrictHostKeyChecking=no ${ssh_user}@${orig_master_host} \
+                  "sudo /usr/sbin/ip addr del $VIP dev $IFACE 2>/dev/null || true"
+              log "VIP removed"
+              exit 0
+              ;;
+          start)
+              log "Adding VIP to $new_master_host"
+              IFACE=$(ssh -o StrictHostKeyChecking=no ${ssh_user}@${new_master_host} "ip route | awk '/default/ {print \$5}'")
+              ssh -o StrictHostKeyChecking=no ${ssh_user}@${new_master_host} \
+                  "sudo /usr/sbin/ip addr add $VIP dev $IFACE 2>/dev/null || true"
+              log "VIP added"
+              exit 0
+              ;;
+          status)
+              exit 0
+              ;;
+          *)
+              log "Unknown command"
+              exit 0
+              ;;
+      esac
+    dest: /usr/local/bin/master_ip_online_change.sh
     owner: root
     group: root
     mode: '0755'
@@ -289,7 +387,7 @@
       
       sleep 30
       
-      log "Step 1: Waiting for original master MySQL (INFINITE)..."
+      log "Step 1: Waiting for original master to come online (INFINITE)..."
       RETRY=0
       LOG_INTERVAL=120  # 1시간 = 120회 시도 (30초 * 120 = 3600초)
       
@@ -298,16 +396,35 @@
           
           # 처음 10번은 매번 로그, 그 이후는 1시간에 1번만
           if [ $RETRY -le 10 ] || [ $((RETRY % LOG_INTERVAL)) -eq 0 ]; then
-              log "Attempt $RETRY - Waiting for $ORIGINAL_MASTER to come back..."
+              log "Attempt $RETRY - Waiting for $ORIGINAL_MASTER (ping + MySQL)..."
           fi
       
-          if mysql -h $ORIGINAL_MASTER -u$MYSQL_USER -p$MYSQL_PASS -e "SELECT 1" >/dev/null 2>&1; then
-              log "✓ Original master MySQL is UP after $RETRY attempts!"
-              break
+          # Ping 체크
+          if ping -c 1 -W 2 $ORIGINAL_MASTER >/dev/null 2>&1; then
+              # MySQL 체크
+              if mysql -h $ORIGINAL_MASTER -u$MYSQL_USER -p$MYSQL_PASS -e "SELECT 1" >/dev/null 2>&1; then
+                  log "✓ Original master is UP (ping + MySQL OK) after $RETRY attempts!"
+                  break
+              fi
           fi
       
           sleep 30
       done
+      
+      log "Step 1.5: Cleaning up duplicate VIP..."
+      # Master가 복귀했을 때 둘 다 VIP가 있을 수 있으므로 확인 후 정리
+      VIP_ON_ORIGINAL=$(ssh $SSH_OPTS ${USER}@${ORIGINAL_MASTER} "ip addr show | grep '10.4.4.100'" 2>/dev/null | wc -l)
+      VIP_ON_CURRENT=$(ssh $SSH_OPTS ${USER}@${CURRENT_MASTER} "ip addr show | grep '10.4.4.100'" 2>/dev/null | wc -l)
+      
+      log "VIP status: Original=$VIP_ON_ORIGINAL, Current=$VIP_ON_CURRENT"
+      
+      # Original Master에 VIP가 있으면 제거 (아직 Slave로 전환 전)
+      if [ "$VIP_ON_ORIGINAL" -gt 0 ]; then
+          log "Removing VIP from original master $ORIGINAL_MASTER"
+          IFACE_ORIGINAL=$(ssh $SSH_OPTS ${USER}@${ORIGINAL_MASTER} "ip route | awk '/default/ {print \$5}'")
+          ssh $SSH_OPTS ${USER}@${ORIGINAL_MASTER} "sudo /usr/sbin/ip addr del $VIP dev $IFACE_ORIGINAL 2>/dev/null || true"
+          log "VIP removed from $ORIGINAL_MASTER"
+      fi
       
       log "Step 2: Configuring original master as slave..."
       mysql -h $ORIGINAL_MASTER -u$MYSQL_USER -p$MYSQL_PASS <<SQLCMD >> "$LOG" 2>&1
@@ -393,10 +510,17 @@
       pkill -f masterha_manager 2>/dev/null || true
       sleep 5
       
-      log "Step 10: Verifying VIP location..."
+      log "Step 10: Final VIP verification..."
       VIP_MASTER=$(ssh $SSH_OPTS ${USER}@${ORIGINAL_MASTER} "ip addr | grep '10.4.4.100'" 2>/dev/null | wc -l)
       VIP_SLAVE=$(ssh $SSH_OPTS ${USER}@${CURRENT_MASTER} "ip addr | grep '10.4.4.100'" 2>/dev/null | wc -l)
-      log "VIP check: Master=$VIP_MASTER, Slave=$VIP_SLAVE"
+      log "Final VIP check: Master=$VIP_MASTER, Slave=$VIP_SLAVE"
+      
+      if [ "$VIP_MASTER" -eq 0 ] || [ "$VIP_SLAVE" -gt 0 ]; then
+          log "WARNING: VIP not correctly placed! Fixing..."
+          ssh $SSH_OPTS ${USER}@${CURRENT_MASTER} "sudo /usr/sbin/ip addr del $VIP dev $IFACE_CURRENT 2>/dev/null || true"
+          ssh $SSH_OPTS ${USER}@${ORIGINAL_MASTER} "sudo /usr/sbin/ip addr add $VIP dev $IFACE_ORIGINAL 2>/dev/null || true"
+          log "VIP placement corrected"
+      fi
       
       log "Step 11: Restarting MHA Manager..."
       sudo systemctl start mha-manager >> "$LOG" 2>&1
