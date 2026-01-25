@@ -4,10 +4,23 @@
 ## (Master/Slave)
 ## 호스트네임 설정
 ############################
-- name: 호스트네임 설정
+- name: 호스트네임 설정 (db-nfs)
   ansible.builtin.hostname:
-    name: "{{ hostname }}"
+    name: "{{ db_nfs_hostname }}"
     use: systemd
+  when: "'db_nfs' in group_names"
+
+- name: 호스트네임 설정 (db-master)
+  ansible.builtin.hostname:
+    name: "{{ db_master_hostname }}"
+    use: systemd
+  when: "'db_master' in group_names"
+
+- name: 호스트네임 설정 (db-slave)
+  ansible.builtin.hostname:
+    name: "{{ db_slave_hostname }}"
+    use: systemd
+  when: "'db_slave' in group_names"
 
 - name: /etc/hosts 기존 항목 제거
   ansible.builtin.lineinfile:

@@ -1,6 +1,6 @@
 ---
 - name: 0_1) hostname
-  import_tasks: init_01_hostname.yaml
+  include_tasks: init_01_hostname.yaml
   when: "'db_master' in group_names or 'db_slave' in group_names or 'db_nfs' in group_names"
 
 - name: 1_1) NFS 서버 설정
