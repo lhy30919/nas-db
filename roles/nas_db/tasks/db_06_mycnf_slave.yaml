@@ -1,6 +1,12 @@
 ---
+############################
+## roles/nas_db/tasks/db_06_mycnf_slave.yaml
+## (Slave)
+## Slave 전용 my.cnf 옵션 설정
+############################
+
 - name: MySQL Slave 전용 my.cnf 옵션 설정
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/my.cnf
     insertafter: '^\[mysqld\]'
     regexp: '^[[:space:]]*{{ item.key }}[[:space:]]*='
@@ -9,7 +15,7 @@
   register: slave_conf
 
 - name: MySQL Slave 설정 변경 시 재시작
-  service:
+  ansible.builtin.service:
     name: mysqld
     state: restarted
   when: slave_conf is changed

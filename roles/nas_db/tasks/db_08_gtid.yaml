@@ -1,6 +1,12 @@
 ---
+############################
+## roles/nas_db/tasks/db_08_gtid.yaml
+## (Slave)
+## GTID 기반 복제 설정
+############################
+
 - name: 마스터 MySQL 포트(3306) 대기
-  wait_for:
+  ansible.builtin.wait_for:
     host: "{{ db_master_ip }}"
     port: 3306
     timeout: "{{ mysql_slave_check_timeout }}"

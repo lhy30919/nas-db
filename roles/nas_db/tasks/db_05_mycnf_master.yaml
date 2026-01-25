@@ -1,6 +1,12 @@
 ---
+############################
+## roles/nas_db/tasks/db_05_mycnf_master.yaml
+## (Master)
+## Master 전용 my.cnf 설정
+############################
+
 - name: MySQL Master 전용 my.cnf 옵션 설정
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/my.cnf
     insertafter: '^\[mysqld\]'
     regexp: '^[[:space:]]*{{ item.key }}[[:space:]]*='
@@ -9,7 +15,7 @@
   register: master_conf
 
 - name: MySQL Master 설정 변경 시 재시작
-  service:
+  ansible.builtin.service:
     name: mysqld
     state: restarted
   when: master_conf is changed

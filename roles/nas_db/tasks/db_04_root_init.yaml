@@ -1,15 +1,17 @@
 ---
-# roles/nas_db/tasks/db_04_root_init.yaml
-# MySQL 설치 후 초기 설정 (root 비밀번호 설정, 플러그인 제거, 초기 DB 정리)
+############################
+## roles/nas_db/tasks/db_04_root_init.yaml
+## (Master/Slave)
+## MySQL 설치 후 초기 설정 (root 비밀번호 설정, 플러그인 제거, 초기 DB 정리)
+############################
 
 - name: PyMySQL 패키지 설치
-  package:
+  ansible.builtin.dnf:
     name: python3-PyMySQL
     state: present
 
-
 - name: root password marker 확인
-  stat:
+  ansible.builtin.stat:
     path: "{{ mysql_datadir }}/.root_pass_set"
   register: root_pass_marker
 
@@ -26,7 +28,7 @@
     - not root_pass_marker.stat.exists
 
 - name: root password marker 생성
-  file:
+  ansible.builtin.file:
     path: "{{ mysql_datadir }}/.root_pass_set"
     state: touch
   when:

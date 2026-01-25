@@ -1,4 +1,10 @@
 ---
+############################
+## roles/nas_db/tasks/b_09_table.yaml
+## (Master)
+## 백업 DB 및 테이블 생성
+############################
+
 - name: 데이터베이스 생성 확인
   community.mysql.mysql_db:
     name: "{{ db_name }}"

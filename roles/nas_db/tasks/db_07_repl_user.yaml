@@ -1,4 +1,10 @@
 ---
+############################
+## roles/nas_db/tasks/db_07_repl_user.yaml
+## (Master)
+## Replication User 생성
+############################
+
 - name: MySQL Replication 사용자 생성/유지
   community.mysql.mysql_user:
     name: "{{ mysql_repl_user }}"

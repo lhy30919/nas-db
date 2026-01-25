@@ -1,4 +1,10 @@
 ---
+############################
+## roles/nas_db/tasks/db_10_backup_user.yaml
+## (Master)
+## 백업 관리자 계정 생성
+############################
+
 - name: 백업 관리자 계정 생성 확인
   community.mysql.mysql_user:
     name: "{{ backup_admin_user }}"

@@ -1,6 +1,11 @@
 ---
+############################
+## roles/nas_db/tasks/db_02_mycnf_common.yaml
+## (Master/Slave)
+## /etc/my.cnf 공통 설정
+############################
 - name: MySQL 데이터 디렉토리 생성
-  file:
+  ansible.builtin.file:
     path: "{{ mysql_datadir }}"
     state: directory
     owner: mysql
@@ -20,7 +25,7 @@
     creates: "{{ mysql_datadir }}/mysql"
 
 - name: MySQL 서비스 시작 및 부팅 시 자동 실행
-  systemd:
+  ansible.builtin.systemd:
     name: "{{ mysql_service_name }}"
     state: started
     enabled: yes
