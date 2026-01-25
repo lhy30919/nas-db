@@ -5,15 +5,15 @@
 
 ## nfs    : 10.4.4.11 , db-nfs
 db_nfs_ip: "{{ hostvars[groups['db_nfs'][0]]['ansible_host'] }}"
-db_nfs_hostname: "{{ hostvars[groups['db_nfs'][0]]['hostname'] }}"
+db_nfs_hostname: "mha-manager"
 
 ## master : 10.4.4.12 , db-master
 db_master_ip: "{{ hostvars[groups['db_master'][0]]['ansible_host'] }}"
-db_master_hostname: "{{ hostvars[groups['db_master'][0]]['hostname'] }}"
+db_master_hostname: "db-master"
 
 ## slave  : 10.4.4.13 , db-slave
 db_slave_ip: "{{ hostvars[groups['db_slave'][0]]['ansible_host'] }}"
-db_slave_hostname: "{{ hostvars[groups['db_slave'][0]]['hostname'] }}"
+db_slave_hostname: "db-slave"
 
 ## 가상 ip 설정 (mha)
 db_virtual_ip: "10.4.4.100"
