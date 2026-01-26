@@ -2,31 +2,6 @@
 # roles/nas_db/tasks/manager.yaml
 # MHA Manager 서버(10.4.4.11) 설정
 
-- name: 호스트네임 설정
-  ansible.builtin.hostname:
-    name: mha-manager
-    use: systemd
-
-- name: /etc/hostname 파일 생성
-  ansible.builtin.copy:
-    content: "mha-manager\n"
-    dest: /etc/hostname
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: /etc/hosts 설정
-  ansible.builtin.copy:
-    content: |
-      127.0.0.1   localhost
-      ::1         localhost
-      10.4.4.11 mha-manager
-      10.4.4.12 db-master
-      10.4.4.13 db-slave
-    dest: /etc/hosts
-    owner: root
-    group: root
-    mode: '0644'
 
 - name: EPEL 저장소 설치
   ansible.builtin.dnf:
