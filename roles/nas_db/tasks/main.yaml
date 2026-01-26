@@ -1,5 +1,5 @@
 ---
-- name: 0_1) hostname
+- name: 0_1) hostname 설정
   include_tasks: init_01_hostname.yaml
   when: "'db_master' in group_names or 'db_slave' in group_names or 'db_nfs' in group_names"
 
@@ -61,30 +61,22 @@
 - name: 2_13) 백업 복구 프로그램 배포
   include_tasks: db_13_deploy_program.yaml
 
-- name: 2_14) admin
+- name: 2_14) 권한설정
   include_tasks: db_14_pri.yaml
   when: "'db_master' in group_names or 'db_slave' in group_names"
 
-- name: "2_15) mha installmaster slave"
-  include_tasks: test_ma_sl.yaml
+- name: 2_15) mha 공통설정 설치
+  include_tasks: db_15_mha_commoninstall.yaml
   when: "'db_master' in group_names or 'db_slave' in group_names or 'db_nfs' in group_names"
 
-- name: "2_15) mha m"
-  include_tasks: test_ma.yaml
+- name: 2_16) mha master 설정
+  include_tasks: db_16_mha_master.yaml
   when: "'db_master' in group_names"
 
-- name: "2_15) mha s"
-  include_tasks: test_sl.yaml
+- name: 2_17) mha slave 설정
+  include_tasks: db_17_mha_slave.yaml
   when: "'db_slave' in group_names"
 
-# - name: 2_15) mha master
-#   include_tasks: db_15_mmha.yaml 
-#   when: "'db_master' in group_names"
-
-# - name: 2_16) mha  slave
-#   include_tasks: db_16_smha.yaml
-#   when: "'db_slave' in group_names"
-
-- name: 2_17) mha  manager
-  include_tasks: db_17_nmha.yaml
+- name: 2_18) mha manager 설정
+  include_tasks: db_18_mha_manager.yaml
   when: "'db_nfs' in group_names"

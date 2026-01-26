@@ -1,5 +1,10 @@
 ---
-# roles/nas_db/tasks/nfs_02_client.yaml
+############################
+## roles/nas_db/tasks/nfs_02_client.yaml
+## (Master/Slave)
+## /etc/my.cnf 공통 설정
+############################
+
 - name: NFS 마운트 여부 확인 (stale-safe)
   shell: grep -q " {{ nfs_mount_path }} " /proc/self/mounts
   register: mount_check
