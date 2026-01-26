@@ -81,7 +81,6 @@ mysql_repl_privileges: "*.*:REPLICATION SLAVE"
 
 #6)
 # Replication (GTID)
-db_master_ip: "10.4.4.12"
 mysql_slave_check_timeout: 30
 
 
