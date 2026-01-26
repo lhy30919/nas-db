@@ -1,29 +1,19 @@
 ---
-- name: 소스 디렉토리 생성
+- name: 소스 로그 디렉토리 생성
   ansible.builtin.file:
-    path: /home/ansible-admin/src
-    state: directory
-    owner: ansible-admin
-    group: ansible-admin
-    mode: '0755'
-
-- name: MHA 로그 디렉토리 생성
-  ansible.builtin.file:
-    path: /var/log/mha/app1
+    path: "{{ item }}"
     state: directory
     owner: ansible-admin
     group: ansible-admin
     mode: '0755'
     recurse: yes
+  loop:
+    - /home/ansible-admin/src
+    - /var/log/mha/app1
 
 - name: /mnt 디렉토리 권한 설정
   ansible.builtin.file:
     path: /mnt
-    mode: '0755'
-
-- name: /mnt/new_disk 디렉토리 권한 설정
-  ansible.builtin.file:
-    path: /mnt/new_disk
     mode: '0755'
     recurse: yes
 

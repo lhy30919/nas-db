@@ -64,17 +64,16 @@
 - name: 2_14) admin
   include_tasks: db_14_pri.yaml
   when: "'db_master' in group_names or 'db_slave' in group_names"
-test_ma_sl.yaml
 
-- name: 2_15) mha install - master/slave
+- name: "2_15) mha installmaster slave"
   include_tasks: test_ma_sl.yaml
-  when: "'db_master' in group_names or 'db_slave' in group_names"
+  when: "'db_master' in group_names or 'db_slave' in group_names or 'db_nfs' in group_names"
 
-- name: 2_15) mha m
+- name: "2_15) mha m"
   include_tasks: test_ma.yaml
   when: "'db_master' in group_names"
 
-- name: 2_15) mha s
+- name: "2_15) mha s"
   include_tasks: test_sl.yaml
   when: "'db_slave' in group_names"
 
