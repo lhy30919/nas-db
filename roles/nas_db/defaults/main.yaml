@@ -2,11 +2,30 @@
 # ##############
 # NFS
 # ##############
+db_nfs_ip: "{{ hostvars[groups['db_nfs'][0]].ansible_host }}"
+db_nfs_hostname: "mha-manager"
+db_master_ip: "{{ hostvars[groups['db_master'][0]].ansible_host }}"
+db_master_hostname: "db-master"
+db_slave_ip: "{{ hostvars[groups['db_slave'][0]].ansible_host }}"
+db_slave_hostname: "db-slave"
+
+## 가상 ip 설정 (mha)
+db_virtual_ip: "10.4.4.100"
 
 # 공유폴더
 nfs_mount_path: /mnt/NAS
 
 nfs_owner_user: ansible-admin
+
+nfs_server_packages:
+  - nfs-utils
+  - rpcbind
+nfs_client_packages:
+  - nfs-utils
+nfs_firewall:
+  - nfs
+  - rpc-bind
+  - mountd
 
 pc_map:
   PC1: PC1_ai
