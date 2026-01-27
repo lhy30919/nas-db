@@ -14,7 +14,7 @@ import mysql.connector
 # ==============================
 # MySQL 연결
 db_connection = mysql.connector.connect(
-    host="{{ db_master_ip }}",
+    host="{{ db_virtual_ip }}",
     user="{{ backup_admin_user }}",
     password="{{ backup_admin_password }}",
     database="{{ backup_db }}",
@@ -57,11 +57,6 @@ def get_pc_folder_from_ip():
 
     return pc_map.get(int(match.group(1))), service_ip
 # ==============================
-# 0-2) 전역 경로 및 마스터 IP
-# ==============================
-MASTER_IP = "10.4.4.12"
-
-# ==============================
 # 0-4) table 표시용 이름 매핑
 # ==============================
 TABLE_DISPLAY_MAP = {
@@ -74,11 +69,11 @@ TABLE_DISPLAY_MAP = {
 }
 
 # ==============================
-# 0-5) 마스터 여부
+# 0-5) mha-manager 여부
 # ==============================
 def is_master_node():
     ip = socket.gethostbyname(socket.gethostname())
-    return ip == MASTER_IP
+    return ip == "{{ db_nfs_ip }}"
 
 # ==============================
 # 0-6) 백업 파일명 생성
