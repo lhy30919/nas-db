@@ -1,15 +1,15 @@
 ---
-- name: 0_1) hostname 설정
-  include_tasks: init_01_hostname.yaml
-  when: "'db_master' in group_names or 'db_slave' in group_names or 'db_nfs' in group_names"
+#- name: 0_1) hostname 설정
+#  include_tasks: init_01_hostname.yaml
+#  when: "'db_master' in group_names or 'db_slave' in group_names or 'db_nfs' in group_names"
 
-- name: 1_1) NFS 서버 설정
-  include_tasks: nfs_01_server.yaml
-  when: "'db_nfs' in group_names"
+#- name: 1_1) NFS 서버 설정
+#  include_tasks: nfs_01_server.yaml
+#  when: "'db_nfs' in group_names"
 
-- name: 1_2) NFS 클라이언트 설정
-  include_tasks: nfs_02_client.yaml
-  when: "'client' in group_names"
+#- name: 1_2) NFS 클라이언트 설정
+#  include_tasks: nfs_02_client.yaml
+#  when: "'client' in group_names"
 
 - name: 2_1) DB 설치 (마스터/슬레이브 공통)
   include_tasks: db_01_install_server.yaml
