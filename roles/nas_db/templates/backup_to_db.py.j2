@@ -4,7 +4,7 @@ from datetime import datetime
 
 # MySQL 연결
 db_connection = mysql.connector.connect(
-    host="{{ db_master_ip }}",
+    host="{{ db_virtual_ip }}",
     user="{{ backup_admin_user }}",
     password="{{ backup_admin_password }}",
     database="{{ backup_db }}",

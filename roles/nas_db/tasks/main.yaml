@@ -56,7 +56,7 @@
 
 - name: 2_12) NAS → DB 백업 cron 설정
   include_tasks: db_12_cron.yaml
-  when: "'db_master' in group_names"
+  when: "'db_nfs' in group_names"
 
 - name: 2_13) 백업 복구 프로그램 배포
   include_tasks: db_13_deploy_program.yaml
