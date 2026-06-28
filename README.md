@@ -33,3 +33,13 @@
 | 22 | `db_test.yaml` | Replication 및 MHA 동작 테스트 |
 | 23 | `main.yaml` | 전체 Playbook 실행 및 Task 순차 호출 |
 
+## roles/nas-db/templates
+
+| No | File Name | Description |
+|:--:|-----------|-------------|
+| 1 | `backup_program.py` | 각 서버의 데이터를 증분 백업하여 NAS에 저장하는 백업 프로그램 |
+| 2 | `backup_to_db.py` | NAS에 저장된 백업 파일을 MariaDB에 업로드하는 프로그램 |
+| 3 | `master_ip_failover.sh` | Master 장애 발생 시 VIP를 신규 Master로 이동하는 Failover 스크립트 |
+| 4 | `master_ip_online_change.sh` | 계획된 Master 전환 시 서비스 중단 없이 VIP를 이동하는 스크립트 |
+| 5 | `mha_auto_recovery.sh` | Failover 이후 신규 Master 환경을 자동 복구하고 서비스를 재구성하는 스크립트 |
+| 6 | `mha_precheck.sh` | MHA 실행 전 Master·Slave 복제 상태 및 접속을 사전 점검하는 스크립트 |
