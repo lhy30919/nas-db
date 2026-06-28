@@ -12,10 +12,10 @@
 | 1 | `init_01_hostname.yaml` | 호스트명(Hostname) 설정 |
 | 2 | `nfs_01_server.yaml` | NFS 서버 설치 및 공유 디렉터리 구성 |
 | 3 | `nfs_02_client.yaml` | NFS 클라이언트 설치 및 마운트 설정 |
-| 4 | `db_01_install_server.yaml` | MariaDB 서버 설치 |
-| 5 | `db_02_mycnf_common.yaml` | MariaDB 공통(my.cnf) 설정 적용 |
-| 6 | `db_03_firewall.yaml` | MariaDB 서비스 방화벽 설정 |
-| 7 | `db_04_root_init.yaml` | MariaDB Root 계정 초기화 및 보안 설정 |
+| 4 | `db_01_install_server.yaml` | MySQL 서버 설치 |
+| 5 | `db_02_mycnf_common.yaml` | MySQL 공통(my.cnf) 설정 적용 |
+| 6 | `db_03_firewall.yaml` | MySQL 서비스 방화벽 설정 |
+| 7 | `db_04_root_init.yaml` | MySQL Root 계정 초기화 및 보안 설정 |
 | 8 | `db_05_mycnf_master.yaml` | Master 서버용 my.cnf 설정 |
 | 9 | `db_06_mycnf_slave.yaml` | Slave 서버용 my.cnf 설정 |
 | 10 | `db_07_repl_user.yaml` | Replication 사용자 생성 및 권한 부여 |
