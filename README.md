@@ -32,4 +32,4 @@
 | 21 | `db_18_mha_manager.yaml` | MHA Manager 설치 및 구성 |
 | 22 | `db_test.yaml` | Replication 및 MHA 동작 테스트 |
 | 23 | `main.yaml` | 전체 Playbook 실행 및 Task 순차 호출 |
-```
+
