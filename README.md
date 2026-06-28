@@ -5,9 +5,9 @@
 
 # roles/nas-db/tasks
 
-## 📋 Playbook 설명
+## 📋 DB 파트 플레이북 설명
 
-| No | Playbook | 설명 |
+| No | tasks | 설명 |
 |:--:|----------|------|
 | 1 | `init_01_hostname.yaml` | 호스트명(Hostname) 설정 |
 | 2 | `nfs_01_server.yaml` | NFS 서버 설치 및 공유 디렉터리 구성 |
